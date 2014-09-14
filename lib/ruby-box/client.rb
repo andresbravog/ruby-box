@@ -137,20 +137,55 @@ module RubyBox
       EventResponse.new(@session, resp)
     end
 
-    def me
-      resp = @session.get( "#{RubyBox::API_URL}/users/me" )
+    # Current user information
+    #
+    # @params query_params [Hash] query_params to add to the request
+    # @option query_params [String] fields () fields to show in the request sparated by commas
+    # @return [RubyBox::User]
+    def me(query_params={})
+      url = url_with_query_params("#{RubyBox::API_URL}/users/me", query_params)
+      resp = @session.get(url)
       User.new(@session, resp)
     end
 
-    def users(filter_term = "", limit = 100, offset = 0)
-      url = "#{RubyBox::API_URL}/users?filter_term=#{URI::encode(filter_term)}&limit=#{limit}&offset=#{offset}"
-      resp = @session.get( url )
+    # Enterprise users collection
+    #
+    # @params query_params [Hash] query_params to add to the request
+    # @option query_params [String] filter_term ('') A string used to filter the results to only users starting with the filter_term in either the name or the login
+    # @option query_params [Integer] limit (100) The number of records to return. (max=1000)
+    # @option query_params [Integer] offset (0) The record at which to start
+    # @return [Array(RubyBox::User)]
+    def users(query_params={})
+      query_params = query_params_with_default(query_params,  { filter_term: '', limit: 100, offset: 0 })
+      url = url_with_query_params("#{RubyBox::API_URL}/users", query_params)
+      resp = @session.get(url)
       resp['entries'].map do |entry|
         RubyBox::Item.factory(@session, entry)
       end
     end
 
     private
+
+    # Joins given base url with the given params
+    #
+    # @params base_url [String] base url to join
+    # @params query_params [Hash] given query params to join with the base url
+    # @return [String]
+    def url_with_query_params(base_url, query_params={})
+      uri = URI.parse(base_url)
+      new_query_params = URI.decode_www_form(uri.query || '') + query_params.to_a
+      uri.query = URI.encode_www_form(new_query_params)
+      uri.to_s
+    end
+
+    # Joins params with given default options
+    #
+    # @params query_params [Hash] given query params
+    # @params default_options [Hash] default query params values if any of them are not given
+    # @return [Hash]
+    def query_params_with_default(query_params={}, default_options={})
+      default_options.merge(query_params)
+    end
 
     def upload_file_to_folder(local_path, folder, overwrite)
       file_name = local_path.split('/').pop
