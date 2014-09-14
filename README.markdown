@@ -37,7 +37,7 @@ p '@token.refresh_token' # token that can be exchanged for a new access_token on
 session = RubyBox::Session.new({
   client_id: 'your-client-id',
   client_secret: 'your-client-secret',
-  access_token: 'original-access-token' 
+  access_token: 'original-access-token'
 })
 
 # you need to persist this somehow. the refresh token will change every time you use it
@@ -172,7 +172,7 @@ p file.created_at
 
 ```ruby
 file = client.upload_file('./LICENSE.txt', '/license_folder') # lookups by id are more efficient
-file = client.upload_file_by_folder_id('./LICENSE.txt', @folder_id) 
+file = client.upload_file_by_folder_id('./LICENSE.txt', @folder_id)
 ```
 
 * Downloading a file.
@@ -307,6 +307,12 @@ Current User Info
 me = client.me
 ```
 
+* Remember you can request some especific fields
+
+```ruby
+me = client.me(fields: 'role')
+```
+
 Current User's enterprise
 
 ```ruby
@@ -322,7 +328,10 @@ users = client.users
 * Remeber the API filters "name" and "login" by the start of the string.  ie: to get "sean+awesome@gmail.com" an approriate filter term would be "sean"
 
 ```ruby
-users = client.users("sean" , 10 , 1)
+users = client.users(filter_term: 'sean',
+                     limit: 10,
+                     offset: 1,
+                     fields: 'role')
 ```
 
 Contributors
@@ -334,7 +343,7 @@ Contributing to ruby-box
 ========================
 
 RubyBox does not yet support all of Box's API Version 2.0 functionality, be liberal with your contributions.
- 
+
 * Rename account.example to account.yml and fill in your Box credentials
 * Type bundle install
 * Type rake.. tests should pass
