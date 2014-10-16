@@ -69,18 +69,37 @@ module RubyBox
       self
     end
 
+    # Returns object metadata of given metadata type
+    #
+    # @param type [String] metadata type as described https://developers.box.com/metadata-api/
+    # @return [Hash]
+    def metadata(type)
+      url = "#{RubyBox::API_URL}/#{resource_name}/#{@raw_item['id']}/metadata/#{type}"
+      @session.get(url)
+    end
+
+    # Returns object metadata of given metadata type
+    #
+    # @param type [String] metadata type as described https://developers.box.com/metadata-api/
+    # @param hash [Hash] new metadata values
+    # @return [Hash]
+    def create_metadata(type, hash)
+      url = "#{RubyBox::API_URL}/#{resource_name}/#{@raw_item['id']}/metadata/#{type}"
+      @session.post(url, hash)
+    end
+
     def method_missing(method, *args, &block)
       key = method.to_s
 
       # Support has many and paginated has many relationships.
       return many(key) if @@has_many.include?(key)
       return paginated(key, args[0] || 100, args[1] || 0, args[2]) if @@has_many_paginated.include?(key)
-      
+
       # update @raw_item hash if this appears to be a setter.
       setter = method.to_s.end_with?('=')
       key = key[0...-1] if setter
       @raw_item[key] = args[0] if setter and update_fields.include?(key)
-      
+
       # we may have a mini version of the object loaded, fix this.
       reload_meta if @raw_item[key].nil? and has_mini_format?
 
