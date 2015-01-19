@@ -271,6 +271,17 @@ items.each do |item|
 end
 ```
 
+You can also use many filters. [Search API](https://developers.box.com/docs/#search)
+
+```ruby
+items = client.search('image',
+                       type: 'file',
+                       scope: 'user_content',
+                       file_extensions: ['png', 'jpg', 'gif'],
+                       content_types: ['description', 'name', 'file_content'])
+
+```
+
 Events
 ------
 
