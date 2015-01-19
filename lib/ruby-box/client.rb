@@ -58,15 +58,34 @@ module RubyBox
       file.stream(opts) if file
     end
 
-    def search(query, item_limit=100, offset=0)
+    # Searchs in box API by the given options
+    #
+    # @param query [String] query to search for
+    # @param options [Hash] options given to the API box search endpoint
+    # @option options [Integer] item_limit (100) limit of the batch fo search
+    # @option options [Integer] offset (0) offset for the search
+    # @option options [String] scope () scope to search items ['user_content', 'enterprise_content', 'enterprise_content']
+    # @option options [Array<String>] file_extensions () extension of files to serch for ['jpg', 'png', ...]
+    # @option options [Array<String>] content_types () type of the content to search in ['name', 'description', 'file_content', 'comments', 'tags']
+    # @option options [ArrayzString>] type () type of the items to search for ['folder', 'file', 'web_link']
+    # @return [Array<RubyBox::Item>]
+    def search(query, options={})
+      options[:item_limit] ||= 100
+      options[:offset] ||= 0
       Enumerator.new do |yielder|
         while true
-          url = "#{RubyBox::API_URL}/search?query=#{URI::encode(query)}&limit=#{item_limit}&offset=#{offset}"
+          url  = "#{RubyBox::API_URL}/search?query=#{URI::encode(query)}"
+          url += "&limit=#{options[:item_limit]}"
+          url += "&offset=#{options[:offset]}"
+          url += "&scope=#{options[:scope]}" if options[:scope]
+          url += "&file_extensions=#{options[:file_extensions].join(',')}" if options[:file_extensions]
+          url += "&content_types=#{options[:content_types].join(',')}" if options[:content_type]
+          url += "&type=#{options[:type].join(',')}" if options[:type]
           resp = @session.get( url )
           resp['entries'].each do |entry|
             yielder.yield(RubyBox::Item.factory(@session, entry))
           end
-          offset += resp['entries'].count
+          options[:offset] += resp['entries'].count
           break if resp['offset'].to_i + resp['limit'].to_i >= resp['total_count'].to_i
         end
       end
